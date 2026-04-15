@@ -10,7 +10,131 @@ import {
 } from "@workspace/api-client-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { Upload, Trash2, Search, ChevronLeft, ChevronRight, FileText, Plus, Download } from "lucide-react";
+import { Upload, Trash2, Search, ChevronLeft, ChevronRight, FileText, Plus, Map, ExternalLink, Copy, CheckCircle2 } from "lucide-react";
+
+const SITEMAP_URLS = [
+  { label: "Sitemap Index", path: "/sitemap.xml", desc: "Submit URL ini ke Google Search Console" },
+  { label: "Sitemap Pages", path: "/sitemap-pages.xml", desc: "Halaman statis website" },
+  { label: "Sitemap Posts (halaman 1)", path: "/sitemap-posts-1.xml", desc: "50.000 keyword pertama" },
+];
+
+function SitemapTab() {
+  const { data: stats } = useGetKeywordsStats();
+  const [copied, setCopied] = useState<string | null>(null);
+  const baseUrl = window.location.origin;
+
+  const copy = (text: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(text);
+      setTimeout(() => setCopied(null), 2000);
+    });
+  };
+
+  const total = stats?.total ?? 0;
+  const numPostSitemaps = Math.ceil(total / 50000) || 1;
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-blue-50 border border-blue-200 rounded-xl p-5">
+        <h2 className="font-bold text-blue-900 text-lg mb-2 flex items-center gap-2">
+          <Map className="w-5 h-5" />
+          Cara Submit ke Google Search Console
+        </h2>
+        <ol className="space-y-2 text-sm text-blue-800 list-decimal list-inside">
+          <li>Buka <a href="https://search.google.com/search-console" target="_blank" rel="noreferrer" className="underline font-medium">Google Search Console</a> dan login dengan akun Google Anda</li>
+          <li>Pilih property website Anda (tambahkan jika belum ada)</li>
+          <li>Klik menu <strong>Sitemaps</strong> di sidebar kiri</li>
+          <li>Masukkan URL sitemap index di bawah, klik <strong>Submit</strong></li>
+          <li>Google akan otomatis membaca semua sub-sitemap dan mengindeks halaman Anda</li>
+        </ol>
+      </div>
+
+      <div className="bg-white rounded-xl shadow-md p-6">
+        <h3 className="font-bold text-gray-800 mb-4">URL Sitemap</h3>
+        <div className="space-y-3">
+          {SITEMAP_URLS.map(s => {
+            const url = baseUrl + s.path;
+            return (
+              <div key={s.path} className="border border-gray-200 rounded-lg p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-gray-800 text-sm">{s.label}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">{s.desc}</p>
+                    <code className="mt-2 block text-xs bg-gray-50 border border-gray-200 rounded px-3 py-2 font-mono text-gray-700 break-all">
+                      {url}
+                    </code>
+                  </div>
+                  <div className="flex gap-2 shrink-0 mt-1">
+                    <button
+                      onClick={() => copy(url)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 border border-gray-200 rounded-lg text-xs text-gray-600 hover:border-blue-400 hover:text-blue-600 transition-colors"
+                    >
+                      {copied === url ? <CheckCircle2 className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
+                      {copied === url ? "Copied!" : "Copy"}
+                    </button>
+                    <a
+                      href={s.path}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs hover:bg-blue-700 transition-colors"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                      Buka
+                    </a>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="bg-white rounded-xl shadow-md p-6">
+        <h3 className="font-bold text-gray-800 mb-4">Info Sitemap</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+          <div className="bg-gray-50 rounded-lg p-4 text-center">
+            <p className="text-2xl font-bold text-blue-600">{total.toLocaleString()}</p>
+            <p className="text-xs text-gray-500 mt-1">Total Keywords</p>
+          </div>
+          <div className="bg-gray-50 rounded-lg p-4 text-center">
+            <p className="text-2xl font-bold text-blue-600">{numPostSitemaps}</p>
+            <p className="text-xs text-gray-500 mt-1">File Sitemap Posts</p>
+          </div>
+          <div className="bg-gray-50 rounded-lg p-4 text-center">
+            <p className="text-2xl font-bold text-blue-600">{(total + 5).toLocaleString()}</p>
+            <p className="text-xs text-gray-500 mt-1">Total URL di Sitemap</p>
+          </div>
+        </div>
+        <p className="text-xs text-gray-400 mt-4">
+          * Setiap file sitemap berisi maksimal 50.000 URL sesuai batas Google. Untuk {total.toLocaleString()} keyword,
+          dibutuhkan {numPostSitemaps} file sitemap posts + 1 file sitemap pages + 1 sitemap index.
+        </p>
+      </div>
+
+      <div className="bg-white rounded-xl shadow-md p-6">
+        <h3 className="font-bold text-gray-800 mb-3">Semua URL Sitemap Posts</h3>
+        <div className="space-y-2 max-h-60 overflow-y-auto">
+          {Array.from({ length: numPostSitemaps }, (_, i) => {
+            const url = `${baseUrl}/sitemap-posts-${i + 1}.xml`;
+            return (
+              <div key={i} className="flex items-center gap-2">
+                <code className="flex-1 text-xs bg-gray-50 border border-gray-200 rounded px-3 py-1.5 font-mono text-gray-600 break-all">
+                  {url}
+                </code>
+                <button onClick={() => copy(url)} className="p-1.5 border border-gray-200 rounded hover:border-blue-400 text-gray-400 hover:text-blue-600 transition-colors shrink-0">
+                  {copied === url ? <CheckCircle2 className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                </button>
+                <a href={`/sitemap-posts-${i + 1}.xml`} target="_blank" rel="noreferrer" className="p-1.5 border border-gray-200 rounded hover:border-blue-400 text-gray-400 hover:text-blue-600 transition-colors shrink-0">
+                  <ExternalLink className="w-4 h-4" />
+                </a>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function AdminKeywords() {
   const qc = useQueryClient();
@@ -20,7 +144,7 @@ export default function AdminKeywords() {
   const [bulkText, setBulkText] = useState("");
   const [selectedKws, setSelectedKws] = useState<Set<string>>(new Set());
   const [addResult, setAddResult] = useState<{ added: number; duplicates: number; total: number } | null>(null);
-  const [tab, setTab] = useState<"list" | "add">("list");
+  const [tab, setTab] = useState<"list" | "add" | "sitemap">("list");
 
   const limit = 50;
 
@@ -109,30 +233,39 @@ export default function AdminKeywords() {
       <Header />
       <main className="flex-1">
         <div className="max-w-5xl mx-auto px-4 py-8">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Keyword Manager</h1>
               <p className="text-gray-500 text-sm mt-1">
                 {loadingStats ? "Loading..." : `${stats?.total?.toLocaleString() ?? 0} keywords total`}
               </p>
             </div>
-            <div className="flex gap-3">
+            <div className="flex gap-2 flex-wrap">
               <button
                 onClick={() => setTab("list")}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${tab === "list" ? "bg-blue-600 text-white" : "bg-white border border-gray-200 text-gray-700 hover:border-blue-400"}`}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${tab === "list" ? "bg-blue-600 text-white shadow-sm" : "bg-white border border-gray-200 text-gray-700 hover:border-blue-400"}`}
               >
-                <FileText className="w-4 h-4 inline mr-1.5" />
+                <FileText className="w-4 h-4 inline mr-1.5 -mt-0.5" />
                 Keyword List
               </button>
               <button
                 onClick={() => setTab("add")}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${tab === "add" ? "bg-blue-600 text-white" : "bg-white border border-gray-200 text-gray-700 hover:border-blue-400"}`}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${tab === "add" ? "bg-blue-600 text-white shadow-sm" : "bg-white border border-gray-200 text-gray-700 hover:border-blue-400"}`}
               >
-                <Plus className="w-4 h-4 inline mr-1.5" />
+                <Plus className="w-4 h-4 inline mr-1.5 -mt-0.5" />
                 Add Keywords
+              </button>
+              <button
+                onClick={() => setTab("sitemap")}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${tab === "sitemap" ? "bg-green-600 text-white shadow-sm" : "bg-white border border-gray-200 text-gray-700 hover:border-green-500"}`}
+              >
+                <Map className="w-4 h-4 inline mr-1.5 -mt-0.5" />
+                Sitemap
               </button>
             </div>
           </div>
+
+          {tab === "sitemap" && <SitemapTab />}
 
           {tab === "add" && (
             <div className="bg-white rounded-xl shadow-md p-6 mb-6">
@@ -154,7 +287,7 @@ export default function AdminKeywords() {
                   )}
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 flex-wrap">
                   <label className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-lg text-sm text-gray-700 hover:border-blue-400 cursor-pointer transition-colors bg-white">
                     <Upload className="w-4 h-4" />
                     Upload .txt File
@@ -188,16 +321,22 @@ export default function AdminKeywords() {
               {addResult && (
                 <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
                   <p className="text-green-800 font-medium text-sm">
-                    Added {addResult.added.toLocaleString()} keywords
-                    {addResult.duplicates > 0 && ` (${addResult.duplicates.toLocaleString()} duplicates skipped)`}.
+                    Berhasil menambahkan {addResult.added.toLocaleString()} keywords
+                    {addResult.duplicates > 0 && ` (${addResult.duplicates.toLocaleString()} duplikat dilewati)`}.
                     Total: {addResult.total.toLocaleString()} keywords.
                   </p>
+                  <button
+                    onClick={() => setTab("sitemap")}
+                    className="mt-2 text-sm text-green-700 underline hover:no-underline"
+                  >
+                    Lihat sitemap yang diperbarui →
+                  </button>
                 </div>
               )}
 
               {addMut.isError && (
                 <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-                  <p className="text-red-700 text-sm">Failed to add keywords. Please try again.</p>
+                  <p className="text-red-700 text-sm">Gagal menambahkan keywords. Coba lagi.</p>
                 </div>
               )}
             </div>
@@ -205,8 +344,8 @@ export default function AdminKeywords() {
 
           {tab === "list" && (
             <div className="bg-white rounded-xl shadow-md overflow-hidden">
-              <div className="p-4 border-b border-gray-100 flex items-center gap-3">
-                <form onSubmit={handleSearch} className="flex items-center gap-2 flex-1 max-w-sm border border-gray-200 rounded-lg px-3 py-2">
+              <div className="p-4 border-b border-gray-100 flex items-center gap-3 flex-wrap">
+                <form onSubmit={handleSearch} className="flex items-center gap-2 flex-1 min-w-48 max-w-sm border border-gray-200 rounded-lg px-3 py-2">
                   <Search className="w-4 h-4 text-gray-400 shrink-0" />
                   <input
                     type="search"
@@ -254,7 +393,7 @@ export default function AdminKeywords() {
                             />
                           </th>
                           <th className="px-4 py-3">Keyword</th>
-                          <th className="px-4 py-3">Slug</th>
+                          <th className="px-4 py-3">Slug / URL</th>
                           <th className="px-4 py-3 text-right">Actions</th>
                         </tr>
                       </thead>
