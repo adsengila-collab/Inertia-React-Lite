@@ -11,7 +11,7 @@ router.get("/robots.txt", (req, res) => {
     "User-agent: *",
     "Allow: /",
     "",
-    `Sitemap: ${base}/sitemap.xml`,
+    `Sitemap: ${base}/sitemap/index.xml`,
     "",
   ].join("\n");
 

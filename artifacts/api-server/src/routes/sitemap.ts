@@ -20,7 +20,7 @@ function getBaseUrl(req: { headers: Record<string, string | string[] | undefined
   return `${proto}://${host}`;
 }
 
-router.get("/sitemap.xml", async (req, res) => {
+router.get("/sitemap/index.xml", async (req, res) => {
   const base = getBaseUrl(req as Parameters<typeof getBaseUrl>[0]);
   const total = await getTotalCount();
   const numPostSitemaps = Math.ceil(total / URLS_PER_SITEMAP) || 1;
@@ -30,13 +30,13 @@ router.get("/sitemap.xml", async (req, res) => {
   xml += `<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
 
   xml += `  <sitemap>\n`;
-  xml += `    <loc>${xmlEscape(base)}/sitemap-pages.xml</loc>\n`;
+  xml += `    <loc>${xmlEscape(base)}/sitemap/pages.xml</loc>\n`;
   xml += `    <lastmod>${today}</lastmod>\n`;
   xml += `  </sitemap>\n`;
 
   for (let i = 1; i <= numPostSitemaps; i++) {
     xml += `  <sitemap>\n`;
-    xml += `    <loc>${xmlEscape(base)}/sitemap-posts-${i}.xml</loc>\n`;
+    xml += `    <loc>${xmlEscape(base)}/sitemap/posts-${i}.xml</loc>\n`;
     xml += `    <lastmod>${today}</lastmod>\n`;
     xml += `  </sitemap>\n`;
   }
@@ -48,7 +48,7 @@ router.get("/sitemap.xml", async (req, res) => {
   res.send(xml);
 });
 
-router.get("/sitemap-pages.xml", (req, res) => {
+router.get("/sitemap/pages.xml", (req, res) => {
   const base = getBaseUrl(req as Parameters<typeof getBaseUrl>[0]);
   const today = new Date().toISOString().split("T")[0];
 
@@ -78,7 +78,7 @@ router.get("/sitemap-pages.xml", (req, res) => {
   res.send(xml);
 });
 
-router.get("/sitemap-posts-:page.xml", async (req, res) => {
+router.get("/sitemap/posts-:page.xml", async (req, res) => {
   const base = getBaseUrl(req as Parameters<typeof getBaseUrl>[0]);
   const today = new Date().toISOString().split("T")[0];
   const pageNum = parseInt(req.params.page, 10);

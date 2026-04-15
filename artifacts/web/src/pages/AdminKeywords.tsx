@@ -13,9 +13,9 @@ import Footer from "@/components/Footer";
 import { Upload, Trash2, Search, ChevronLeft, ChevronRight, FileText, Plus, Map, ExternalLink, Copy, CheckCircle2 } from "lucide-react";
 
 const SITEMAP_URLS = [
-  { label: "Sitemap Index", path: "/sitemap.xml", desc: "Submit URL ini ke Google Search Console" },
-  { label: "Sitemap Pages", path: "/sitemap-pages.xml", desc: "Halaman statis website" },
-  { label: "Sitemap Posts (halaman 1)", path: "/sitemap-posts-1.xml", desc: "10.000 keyword pertama" },
+  { label: "Sitemap Index", path: "/sitemap/index.xml", desc: "Submit URL ini ke Google Search Console" },
+  { label: "Sitemap Pages", path: "/sitemap/pages.xml", desc: "Halaman statis website" },
+  { label: "Sitemap Posts (halaman 1)", path: "/sitemap/posts-1.xml", desc: "10.000 keyword pertama" },
 ];
 
 function SitemapTab() {
@@ -115,7 +115,7 @@ function SitemapTab() {
         <h3 className="font-bold text-gray-800 mb-3">Semua URL Sitemap Posts</h3>
         <div className="space-y-2 max-h-60 overflow-y-auto">
           {Array.from({ length: numPostSitemaps }, (_, i) => {
-            const url = `${baseUrl}/sitemap-posts-${i + 1}.xml`;
+            const url = `${baseUrl}/sitemap/posts-${i + 1}.xml`;
             return (
               <div key={i} className="flex items-center gap-2">
                 <code className="flex-1 text-xs bg-gray-50 border border-gray-200 rounded px-3 py-1.5 font-mono text-gray-600 break-all">
@@ -124,7 +124,7 @@ function SitemapTab() {
                 <button onClick={() => copy(url)} className="p-1.5 border border-gray-200 rounded hover:border-blue-400 text-gray-400 hover:text-blue-600 transition-colors shrink-0">
                   {copied === url ? <CheckCircle2 className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
                 </button>
-                <a href={`/sitemap-posts-${i + 1}.xml`} target="_blank" rel="noreferrer" className="p-1.5 border border-gray-200 rounded hover:border-blue-400 text-gray-400 hover:text-blue-600 transition-colors shrink-0">
+                <a href={`/sitemap/posts-${i + 1}.xml`} target="_blank" rel="noreferrer" className="p-1.5 border border-gray-200 rounded hover:border-blue-400 text-gray-400 hover:text-blue-600 transition-colors shrink-0">
                   <ExternalLink className="w-4 h-4" />
                 </a>
               </div>
