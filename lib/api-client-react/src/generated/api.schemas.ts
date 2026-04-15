@@ -8,3 +8,78 @@
 export interface HealthStatus {
   status: string;
 }
+
+export interface ImageResult {
+  title: string;
+  image: string;
+  thumbnail: string;
+  source: string;
+}
+
+export interface Keyword {
+  name: string;
+  slug: string;
+}
+
+export interface KeywordListResponse {
+  keywords: Keyword[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface AddKeywordsBody {
+  /** Keywords, one per line */
+  text: string;
+}
+
+export interface AddKeywordsResponse {
+  added: number;
+  duplicates: number;
+  total: number;
+}
+
+export interface KeywordsStats {
+  total: number;
+  lastUpdated: string;
+}
+
+export interface ErrorResponse {
+  error: string;
+}
+
+export type SearchImagesParams = {
+  /**
+   * Search query
+   */
+  q: string;
+  count?: number;
+};
+
+export type SearchImages200 = {
+  images: ImageResult[];
+  query: string;
+};
+
+export type ListKeywordsParams = {
+  page?: number;
+  limit?: number;
+  search?: string;
+};
+
+export type GetRandomKeywordsParams = {
+  count?: number;
+};
+
+export type GetRandomKeywords200 = {
+  keywords: Keyword[];
+};
+
+export type DeleteKeywordsBody = {
+  keywords: string[];
+};
+
+export type DeleteKeywords200 = {
+  deleted: number;
+};

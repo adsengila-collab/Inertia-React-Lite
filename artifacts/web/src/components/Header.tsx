@@ -1,7 +1,6 @@
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useState } from "react";
-import { Menu, X, Search } from "lucide-react";
-import { useNavigate } from "@/hooks/useNavigate";
+import { Menu, X, Search, Settings } from "lucide-react";
 
 interface HeaderProps {
   title?: string;
@@ -10,12 +9,13 @@ interface HeaderProps {
 export default function Header({ title = "WallpaperHub" }: HeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const { goToPost } = useNavigate();
+  const [, navigate] = useLocation();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      goToPost(searchQuery.trim());
+      const slug = searchQuery.trim().toLowerCase().replace(/\s+/g, "-").replace(/[^\w-]/g, "");
+      navigate("/" + slug);
       setSearchQuery("");
     }
   };
@@ -40,10 +40,14 @@ export default function Header({ title = "WallpaperHub" }: HeaderProps) {
             />
           </form>
 
-          <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
+          <nav className="hidden md:flex items-center gap-5 text-sm font-medium">
             <Link href="/" className="text-slate-300 hover:text-white transition-colors">Home</Link>
             <Link href="/p/contact" className="text-slate-300 hover:text-white transition-colors">Contact</Link>
             <Link href="/p/privacy-policy" className="text-slate-300 hover:text-white transition-colors">Privacy</Link>
+            <Link href="/admin/keywords" className="flex items-center gap-1.5 text-blue-400 hover:text-blue-300 transition-colors">
+              <Settings className="w-3.5 h-3.5" />
+              Keywords
+            </Link>
           </nav>
 
           <button
@@ -72,6 +76,7 @@ export default function Header({ title = "WallpaperHub" }: HeaderProps) {
             <Link href="/p/contact" onClick={() => setMenuOpen(false)} className="block py-2 text-slate-300 hover:text-white transition-colors">Contact</Link>
             <Link href="/p/privacy-policy" onClick={() => setMenuOpen(false)} className="block py-2 text-slate-300 hover:text-white transition-colors">Privacy Policy</Link>
             <Link href="/p/dmca" onClick={() => setMenuOpen(false)} className="block py-2 text-slate-300 hover:text-white transition-colors">DMCA</Link>
+            <Link href="/admin/keywords" onClick={() => setMenuOpen(false)} className="block py-2 text-blue-400 hover:text-blue-300 transition-colors">Keyword Manager</Link>
           </div>
         </div>
       )}

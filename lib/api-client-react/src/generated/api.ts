@@ -5,18 +5,35 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import type {
+  MutationFunction,
   QueryFunction,
   QueryKey,
+  UseMutationOptions,
+  UseMutationResult,
   UseQueryOptions,
   UseQueryResult,
 } from "@tanstack/react-query";
 
-import type { HealthStatus } from "./api.schemas";
+import type {
+  AddKeywordsBody,
+  AddKeywordsResponse,
+  DeleteKeywords200,
+  DeleteKeywordsBody,
+  ErrorResponse,
+  GetRandomKeywords200,
+  GetRandomKeywordsParams,
+  HealthStatus,
+  KeywordListResponse,
+  KeywordsStats,
+  ListKeywordsParams,
+  SearchImages200,
+  SearchImagesParams,
+} from "./api.schemas";
 
 import { customFetch } from "../custom-fetch";
-import type { ErrorType } from "../custom-fetch";
+import type { ErrorType, BodyType } from "../custom-fetch";
 
 type AwaitedInput<T> = PromiseLike<T> | T;
 
@@ -25,7 +42,6 @@ type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 /**
- * Returns server health status
  * @summary Health check
  */
 export const getHealthCheckUrl = () => {
@@ -92,6 +108,538 @@ export function useHealthCheck<
   request?: SecondParameter<typeof customFetch>;
 }): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getHealthCheckQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Search and scrape images from DuckDuckGo
+ */
+export const getSearchImagesUrl = (params: SearchImagesParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/images/search?${stringifiedParams}`
+    : `/api/images/search`;
+};
+
+export const searchImages = async (
+  params: SearchImagesParams,
+  options?: RequestInit,
+): Promise<SearchImages200> => {
+  return customFetch<SearchImages200>(getSearchImagesUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getSearchImagesQueryKey = (params?: SearchImagesParams) => {
+  return [`/api/images/search`, ...(params ? [params] : [])] as const;
+};
+
+export const getSearchImagesQueryOptions = <
+  TData = Awaited<ReturnType<typeof searchImages>>,
+  TError = ErrorType<ErrorResponse>,
+>(
+  params: SearchImagesParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof searchImages>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getSearchImagesQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof searchImages>>> = ({
+    signal,
+  }) => searchImages(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof searchImages>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type SearchImagesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof searchImages>>
+>;
+export type SearchImagesQueryError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Search and scrape images from DuckDuckGo
+ */
+
+export function useSearchImages<
+  TData = Awaited<ReturnType<typeof searchImages>>,
+  TError = ErrorType<ErrorResponse>,
+>(
+  params: SearchImagesParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof searchImages>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getSearchImagesQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary List keywords with pagination
+ */
+export const getListKeywordsUrl = (params?: ListKeywordsParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/keywords?${stringifiedParams}`
+    : `/api/keywords`;
+};
+
+export const listKeywords = async (
+  params?: ListKeywordsParams,
+  options?: RequestInit,
+): Promise<KeywordListResponse> => {
+  return customFetch<KeywordListResponse>(getListKeywordsUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListKeywordsQueryKey = (params?: ListKeywordsParams) => {
+  return [`/api/keywords`, ...(params ? [params] : [])] as const;
+};
+
+export const getListKeywordsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listKeywords>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListKeywordsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listKeywords>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListKeywordsQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listKeywords>>> = ({
+    signal,
+  }) => listKeywords(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listKeywords>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListKeywordsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listKeywords>>
+>;
+export type ListKeywordsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List keywords with pagination
+ */
+
+export function useListKeywords<
+  TData = Awaited<ReturnType<typeof listKeywords>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListKeywordsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listKeywords>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListKeywordsQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Add keywords in bulk (one per line)
+ */
+export const getAddKeywordsUrl = () => {
+  return `/api/keywords`;
+};
+
+export const addKeywords = async (
+  addKeywordsBody: AddKeywordsBody,
+  options?: RequestInit,
+): Promise<AddKeywordsResponse> => {
+  return customFetch<AddKeywordsResponse>(getAddKeywordsUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(addKeywordsBody),
+  });
+};
+
+export const getAddKeywordsMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof addKeywords>>,
+    TError,
+    { data: BodyType<AddKeywordsBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof addKeywords>>,
+  TError,
+  { data: BodyType<AddKeywordsBody> },
+  TContext
+> => {
+  const mutationKey = ["addKeywords"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof addKeywords>>,
+    { data: BodyType<AddKeywordsBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return addKeywords(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AddKeywordsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof addKeywords>>
+>;
+export type AddKeywordsMutationBody = BodyType<AddKeywordsBody>;
+export type AddKeywordsMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Add keywords in bulk (one per line)
+ */
+export const useAddKeywords = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof addKeywords>>,
+    TError,
+    { data: BodyType<AddKeywordsBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof addKeywords>>,
+  TError,
+  { data: BodyType<AddKeywordsBody> },
+  TContext
+> => {
+  return useMutation(getAddKeywordsMutationOptions(options));
+};
+
+/**
+ * @summary Get random keywords for home page
+ */
+export const getGetRandomKeywordsUrl = (params?: GetRandomKeywordsParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/keywords/random?${stringifiedParams}`
+    : `/api/keywords/random`;
+};
+
+export const getRandomKeywords = async (
+  params?: GetRandomKeywordsParams,
+  options?: RequestInit,
+): Promise<GetRandomKeywords200> => {
+  return customFetch<GetRandomKeywords200>(getGetRandomKeywordsUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetRandomKeywordsQueryKey = (
+  params?: GetRandomKeywordsParams,
+) => {
+  return [`/api/keywords/random`, ...(params ? [params] : [])] as const;
+};
+
+export const getGetRandomKeywordsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getRandomKeywords>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: GetRandomKeywordsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getRandomKeywords>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetRandomKeywordsQueryKey(params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getRandomKeywords>>
+  > = ({ signal }) => getRandomKeywords(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getRandomKeywords>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetRandomKeywordsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getRandomKeywords>>
+>;
+export type GetRandomKeywordsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get random keywords for home page
+ */
+
+export function useGetRandomKeywords<
+  TData = Awaited<ReturnType<typeof getRandomKeywords>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: GetRandomKeywordsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getRandomKeywords>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetRandomKeywordsQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Delete keywords
+ */
+export const getDeleteKeywordsUrl = () => {
+  return `/api/keywords/delete`;
+};
+
+export const deleteKeywords = async (
+  deleteKeywordsBody: DeleteKeywordsBody,
+  options?: RequestInit,
+): Promise<DeleteKeywords200> => {
+  return customFetch<DeleteKeywords200>(getDeleteKeywordsUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(deleteKeywordsBody),
+  });
+};
+
+export const getDeleteKeywordsMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteKeywords>>,
+    TError,
+    { data: BodyType<DeleteKeywordsBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteKeywords>>,
+  TError,
+  { data: BodyType<DeleteKeywordsBody> },
+  TContext
+> => {
+  const mutationKey = ["deleteKeywords"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteKeywords>>,
+    { data: BodyType<DeleteKeywordsBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return deleteKeywords(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteKeywordsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteKeywords>>
+>;
+export type DeleteKeywordsMutationBody = BodyType<DeleteKeywordsBody>;
+export type DeleteKeywordsMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Delete keywords
+ */
+export const useDeleteKeywords = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteKeywords>>,
+    TError,
+    { data: BodyType<DeleteKeywordsBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteKeywords>>,
+  TError,
+  { data: BodyType<DeleteKeywordsBody> },
+  TContext
+> => {
+  return useMutation(getDeleteKeywordsMutationOptions(options));
+};
+
+/**
+ * @summary Get keyword count stats
+ */
+export const getGetKeywordsStatsUrl = () => {
+  return `/api/keywords/stats`;
+};
+
+export const getKeywordsStats = async (
+  options?: RequestInit,
+): Promise<KeywordsStats> => {
+  return customFetch<KeywordsStats>(getGetKeywordsStatsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetKeywordsStatsQueryKey = () => {
+  return [`/api/keywords/stats`] as const;
+};
+
+export const getGetKeywordsStatsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getKeywordsStats>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getKeywordsStats>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetKeywordsStatsQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getKeywordsStats>>
+  > = ({ signal }) => getKeywordsStats({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getKeywordsStats>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetKeywordsStatsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getKeywordsStats>>
+>;
+export type GetKeywordsStatsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get keyword count stats
+ */
+
+export function useGetKeywordsStats<
+  TData = Awaited<ReturnType<typeof getKeywordsStats>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getKeywordsStats>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetKeywordsStatsQueryOptions(options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;

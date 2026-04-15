@@ -9,8 +9,16 @@ import Dmca from "@/pages/Dmca";
 import Copyright from "@/pages/Copyright";
 import NotFound from "@/pages/not-found";
 import SinglePost from "@/pages/SinglePost";
+import AdminKeywords from "@/pages/AdminKeywords";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      staleTime: 1000 * 60 * 5,
+    },
+  },
+});
 
 function PostWrapper() {
   const params = useParams<{ slug: string }>();
@@ -21,6 +29,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/admin/keywords" component={AdminKeywords} />
       <Route path="/p/contact" component={Contact} />
       <Route path="/p/privacy-policy" component={PrivacyPolicy} />
       <Route path="/p/dmca" component={Dmca} />

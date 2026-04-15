@@ -8,9 +8,105 @@
 import * as zod from "zod";
 
 /**
- * Returns server health status
  * @summary Health check
  */
 export const HealthCheckResponse = zod.object({
   status: zod.string(),
+});
+
+/**
+ * @summary Search and scrape images from DuckDuckGo
+ */
+export const searchImagesQueryCountDefault = 20;
+
+export const SearchImagesQueryParams = zod.object({
+  q: zod.coerce.string().describe("Search query"),
+  count: zod.coerce.number().default(searchImagesQueryCountDefault),
+});
+
+export const SearchImagesResponse = zod.object({
+  images: zod.array(
+    zod.object({
+      title: zod.string(),
+      image: zod.string(),
+      thumbnail: zod.string(),
+      source: zod.string(),
+    }),
+  ),
+  query: zod.string(),
+});
+
+/**
+ * @summary List keywords with pagination
+ */
+export const listKeywordsQueryPageDefault = 1;
+export const listKeywordsQueryLimitDefault = 50;
+
+export const ListKeywordsQueryParams = zod.object({
+  page: zod.coerce.number().default(listKeywordsQueryPageDefault),
+  limit: zod.coerce.number().default(listKeywordsQueryLimitDefault),
+  search: zod.coerce.string().optional(),
+});
+
+export const ListKeywordsResponse = zod.object({
+  keywords: zod.array(
+    zod.object({
+      name: zod.string(),
+      slug: zod.string(),
+    }),
+  ),
+  total: zod.number(),
+  page: zod.number(),
+  limit: zod.number(),
+  totalPages: zod.number(),
+});
+
+/**
+ * @summary Add keywords in bulk (one per line)
+ */
+export const AddKeywordsBody = zod.object({
+  text: zod.string().describe("Keywords, one per line"),
+});
+
+export const AddKeywordsResponse = zod.object({
+  added: zod.number(),
+  duplicates: zod.number(),
+  total: zod.number(),
+});
+
+/**
+ * @summary Get random keywords for home page
+ */
+export const getRandomKeywordsQueryCountDefault = 20;
+
+export const GetRandomKeywordsQueryParams = zod.object({
+  count: zod.coerce.number().default(getRandomKeywordsQueryCountDefault),
+});
+
+export const GetRandomKeywordsResponse = zod.object({
+  keywords: zod.array(
+    zod.object({
+      name: zod.string(),
+      slug: zod.string(),
+    }),
+  ),
+});
+
+/**
+ * @summary Delete keywords
+ */
+export const DeleteKeywordsBody = zod.object({
+  keywords: zod.array(zod.string()),
+});
+
+export const DeleteKeywordsResponse = zod.object({
+  deleted: zod.number(),
+});
+
+/**
+ * @summary Get keyword count stats
+ */
+export const GetKeywordsStatsResponse = zod.object({
+  total: zod.number(),
+  lastUpdated: zod.string(),
 });

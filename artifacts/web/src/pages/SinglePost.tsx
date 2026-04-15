@@ -5,7 +5,9 @@ import Footer from "@/components/Footer";
 import Sidebar from "@/components/Sidebar";
 import ImageCard from "@/components/ImageCard";
 import Lightbox from "@/components/Lightbox";
-import { getPostImages, getRelatedPosts, getPostDescription, keywords, type ImageItem } from "@/data/mockData";
+import { useSearchImages, useGetRandomKeywords } from "@workspace/api-client-react";
+import type { ImageResult } from "@workspace/api-client-react";
+import type { ImageItem } from "@/data/mockData";
 
 const colorMap: Record<string, string> = {
   "bg-green": "bg-green-500 hover:bg-green-600",
@@ -19,23 +21,45 @@ const colorMap: Record<string, string> = {
   "bg-pink": "bg-pink-500 hover:bg-pink-600",
 };
 
+const COLOR_LIST = ["bg-green","bg-blue","bg-indigo","bg-red","bg-yellow","bg-orange","bg-teal","bg-purple","bg-pink"];
+
 interface SinglePostProps {
   slug: string;
 }
 
+function slugToTitle(slug: string): string {
+  return slug.replace(/-/g, " ").replace(/\b\w/g, l => l.toUpperCase());
+}
+
+function imageResultToItem(item: ImageResult, index: number): ImageItem {
+  return {
+    id: String(index),
+    title: item.title,
+    image: item.image,
+    thumbnail: item.thumbnail,
+    slug: item.title.toLowerCase().replace(/\s+/g, "-").replace(/[^\w-]/g, ""),
+  };
+}
+
 export default function SinglePost({ slug }: SinglePostProps) {
-  const [images, setImages] = useState<ImageItem[]>([]);
+  const title = slugToTitle(slug);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
-  const title = keywords.find(k => k.slug === slug)?.name ||
-    slug.replace(/-/g, " ").replace(/\b\w/g, l => l.toUpperCase());
-  const related = getRelatedPosts(slug);
-  const descriptions = getPostDescription(title);
+  useEffect(() => { window.scrollTo(0, 0); }, [slug]);
 
-  useEffect(() => {
-    setImages(getPostImages(slug));
-    window.scrollTo(0, 0);
-  }, [slug]);
+  const { data: imageData, isLoading } = useSearchImages(
+    { q: title, count: 20 },
+    { query: { enabled: !!slug } }
+  );
+
+  const { data: relatedData } = useGetRandomKeywords({ count: 20 });
+
+  const rawImages: ImageResult[] = imageData?.images ?? [];
+  const images: ImageItem[] = rawImages.map(imageResultToItem);
+
+  const related = (relatedData?.keywords ?? [])
+    .filter(k => k.slug !== slug)
+    .slice(0, 9);
 
   const openLightbox = (item: ImageItem) => {
     const idx = images.findIndex(i => i.id === item.id);
@@ -60,18 +84,33 @@ export default function SinglePost({ slug }: SinglePostProps) {
                 <h1 className="text-3xl font-extrabold text-gray-900 mb-4">{title}</h1>
                 <hr className="my-4" />
 
-                <div className="prose prose-sm max-w-none text-gray-700 space-y-3">
-                  <p className="text-justify">{descriptions[0]} {descriptions[1]}</p>
-                  <p className="text-justify"><br />{descriptions[2]} {descriptions[3]}</p>
-                </div>
+                {isLoading ? (
+                  <div className="space-y-3 animate-pulse">
+                    <div className="h-4 bg-gray-200 rounded w-full" />
+                    <div className="h-4 bg-gray-200 rounded w-5/6" />
+                    <div className="h-4 bg-gray-200 rounded w-4/6" />
+                  </div>
+                ) : (
+                  <div className="text-gray-700 text-sm space-y-3">
+                    <p className="text-justify">
+                      Discover the most stunning {title.toLowerCase()} images and wallpapers available. 
+                      Our curated collection features breathtaking photography and artistic interpretations 
+                      that will transform your screen.
+                    </p>
+                    <p className="text-justify">
+                      Whether you are looking for desktop backgrounds, phone wallpapers, or artistic inspiration, 
+                      this {title.toLowerCase()} gallery has everything you need. Each image is sourced for quality and visual impact.
+                    </p>
+                  </div>
+                )}
 
                 <hr className="my-6" />
 
-                <h2 className="text-xl font-bold mb-4">Related Posts of {title}:</h2>
+                <h2 className="text-lg font-bold mb-4">Related Posts:</h2>
                 <div className="flex flex-wrap gap-2">
-                  {related.map(kw => (
-                    <Link key={kw.id} href={`/${kw.slug}`}>
-                      <button className={`text-white text-xs px-4 py-1.5 rounded-lg leading-none shadow-sm transition-colors ${colorMap[kw.color] || "bg-blue-500 hover:bg-blue-600"}`}>
+                  {related.map((kw, i) => (
+                    <Link key={kw.slug} href={`/${kw.slug}`}>
+                      <button className={`text-white text-xs px-4 py-1.5 rounded-lg leading-none shadow-sm transition-colors ${colorMap[COLOR_LIST[i % 9]] || "bg-blue-500 hover:bg-blue-600"}`}>
                         {kw.name}
                       </button>
                     </Link>
@@ -79,62 +118,78 @@ export default function SinglePost({ slug }: SinglePostProps) {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-                {images.slice(0, 6).map((item, i) => (
-                  <ImageCard
-                    key={i}
-                    item={item}
-                    linkHref="#"
-                    showLightbox
-                    onLightboxOpen={openLightbox}
-                  />
-                ))}
-              </div>
-
-              {images[6] && (
-                <div className="bg-white rounded-xl shadow-md overflow-hidden mb-6">
-                  <div className="relative">
-                    <button onClick={() => setLightboxIndex(6)} className="block w-full">
-                      <img
-                        src={images[6].image}
-                        alt={images[6].title}
-                        className="w-full object-cover max-h-[500px] cursor-zoom-in"
-                        loading="lazy"
-                      />
-                    </button>
-                  </div>
-                  <div className="p-4 text-center">
-                    <h2 className="text-xl font-bold text-gray-800">
-                      {Math.floor(Math.random() * 55) + 15}+ Images of {title}
-                    </h2>
-                  </div>
+              {isLoading ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <div key={i} className="bg-white rounded-xl shadow-md overflow-hidden">
+                      <div className="h-56 bg-gray-200 animate-pulse" />
+                      <div className="p-3"><div className="h-4 bg-gray-200 rounded animate-pulse" /></div>
+                    </div>
+                  ))}
                 </div>
-              )}
-
-              {descriptions.length > 2 && (
-                <div className="bg-white rounded-xl shadow-md p-6 mb-6">
-                  <div className="prose prose-sm max-w-none text-gray-700 space-y-3">
-                    {descriptions.slice(4).map((d, i) => (
-                      <p key={i} className="text-justify">{d}</p>
+              ) : (
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                    {images.slice(0, 6).map((item, i) => (
+                      <ImageCard
+                        key={i}
+                        item={item}
+                        linkHref="#"
+                        showLightbox
+                        onLightboxOpen={openLightbox}
+                      />
                     ))}
                   </div>
-                </div>
+
+                  {images[6] && (
+                    <div className="bg-white rounded-xl shadow-md overflow-hidden mb-6">
+                      <button onClick={() => setLightboxIndex(6)} className="block w-full">
+                        <img
+                          src={images[6].image}
+                          alt={images[6].title}
+                          className="w-full object-cover max-h-[500px] cursor-zoom-in"
+                          loading="lazy"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = images[6].thumbnail;
+                          }}
+                        />
+                      </button>
+                      <div className="p-4 text-center">
+                        <h2 className="text-xl font-bold text-gray-800">
+                          {Math.floor(Math.random() * 55) + 15}+ Images of {title}
+                        </h2>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {images.slice(7).map((item, i) => (
+                      <ImageCard
+                        key={i + 7}
+                        item={item}
+                        linkHref="#"
+                        showLightbox
+                        onLightboxOpen={openLightbox}
+                      />
+                    ))}
+                  </div>
+                </>
               )}
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {images.slice(7).map((item, i) => (
-                  <ImageCard
-                    key={i + 7}
-                    item={item}
-                    linkHref="#"
-                    showLightbox
-                    onLightboxOpen={openLightbox}
-                  />
-                ))}
-              </div>
+              {images.length === 0 && !isLoading && (
+                <div className="text-center py-16 text-gray-400">
+                  <p className="text-lg font-medium">No images found</p>
+                  <p className="text-sm mt-1">Try searching for a different term</p>
+                </div>
+              )}
             </section>
 
-            <Sidebar keywords={keywords.sort(() => Math.random() - 0.5)} />
+            <Sidebar keywords={(relatedData?.keywords ?? []).map((k, i) => ({
+              id: String(i),
+              name: k.name,
+              slug: k.slug,
+              color: COLOR_LIST[i % 9],
+            }))} />
           </div>
         </div>
       </main>

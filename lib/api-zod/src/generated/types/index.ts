@@ -6,4 +6,18 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from "./addKeywordsBody";
+export * from "./addKeywordsResponse";
+export * from "./deleteKeywords200";
+export * from "./deleteKeywordsBody";
+export * from "./errorResponse";
+export * from "./getRandomKeywords200";
+export * from "./getRandomKeywordsParams";
 export * from "./healthStatus";
+export * from "./imageResult";
+export * from "./keyword";
+export * from "./keywordListResponse";
+export * from "./keywordsStats";
+export * from "./listKeywordsParams";
+export * from "./searchImages200";
+export * from "./searchImagesParams";
