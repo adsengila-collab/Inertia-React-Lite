@@ -49,14 +49,13 @@ export default function ImageCard({ item, linkHref, showLightbox, onLightboxOpen
         )}
       </div>
       <div className="p-3 text-center">
-        <h2 className="font-semibold text-sm text-gray-800 hover:text-blue-600 transition-colors truncate">
-          {showLightbox && onLightboxOpen ? (
-            <button onClick={() => onLightboxOpen(item)} className="hover:text-blue-600">
-              {item.title}
-            </button>
-          ) : (
-            <Link href={linkHref}>{item.title}</Link>
-          )}
+        <h2 className="font-semibold text-sm text-gray-800 truncate">
+          <Link
+            href={linkHref}
+            className="hover:text-blue-600 transition-colors"
+          >
+            {item.title}
+          </Link>
         </h2>
       </div>
     </div>

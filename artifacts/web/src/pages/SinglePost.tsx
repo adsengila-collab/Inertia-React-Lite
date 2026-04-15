@@ -134,7 +134,7 @@ export default function SinglePost({ slug }: SinglePostProps) {
                       <ImageCard
                         key={i}
                         item={item}
-                        linkHref="#"
+                        linkHref={`/${item.slug}`}
                         showLightbox
                         onLightboxOpen={openLightbox}
                       />
@@ -167,7 +167,7 @@ export default function SinglePost({ slug }: SinglePostProps) {
                       <ImageCard
                         key={i + 7}
                         item={item}
-                        linkHref="#"
+                        linkHref={`/${item.slug}`}
                         showLightbox
                         onLightboxOpen={openLightbox}
                       />

@@ -3,7 +3,7 @@ import { listKeywords, getTotalCount } from "../lib/keywords.js";
 
 const router = Router();
 
-const URLS_PER_SITEMAP = 50000;
+const URLS_PER_SITEMAP = 10000;
 
 function xmlEscape(str: string): string {
   return str

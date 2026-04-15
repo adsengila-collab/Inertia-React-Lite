@@ -15,7 +15,7 @@ import { Upload, Trash2, Search, ChevronLeft, ChevronRight, FileText, Plus, Map,
 const SITEMAP_URLS = [
   { label: "Sitemap Index", path: "/sitemap.xml", desc: "Submit URL ini ke Google Search Console" },
   { label: "Sitemap Pages", path: "/sitemap-pages.xml", desc: "Halaman statis website" },
-  { label: "Sitemap Posts (halaman 1)", path: "/sitemap-posts-1.xml", desc: "50.000 keyword pertama" },
+  { label: "Sitemap Posts (halaman 1)", path: "/sitemap-posts-1.xml", desc: "10.000 keyword pertama" },
 ];
 
 function SitemapTab() {
@@ -106,7 +106,7 @@ function SitemapTab() {
           </div>
         </div>
         <p className="text-xs text-gray-400 mt-4">
-          * Setiap file sitemap berisi maksimal 50.000 URL sesuai batas Google. Untuk {total.toLocaleString()} keyword,
+          * Setiap file sitemap berisi maksimal 10.000 URL per file sitemap. Untuk {total.toLocaleString()} keyword,
           dibutuhkan {numPostSitemaps} file sitemap posts + 1 file sitemap pages + 1 sitemap index.
         </p>
       </div>
