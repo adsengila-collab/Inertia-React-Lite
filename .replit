@@ -40,13 +40,13 @@ outputType = "console"
 name = "Frontend"
 author = "agent"
 
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "cd artifacts/web && PORT=8081 BASE_PATH=/ API_PORT=8080 pnpm run dev"
-waitForPort = 8081
-
 [workflows.workflow.metadata]
 outputType = "webview"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd artifacts/web && PORT=22333 BASE_PATH=/ API_PORT=8080 pnpm run dev"
+waitForPort = 22333
 
 [agent]
 stack = "PNPM_WORKSPACE"
