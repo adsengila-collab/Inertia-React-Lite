@@ -336,7 +336,16 @@ export default function AdminKeywords() {
 
               {addMut.isError && (
                 <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-                  <p className="text-red-700 text-sm">Gagal menambahkan keywords. Coba lagi.</p>
+                  <p className="text-red-700 font-medium text-sm">Gagal menambahkan keywords.</p>
+                  <p className="text-red-600 text-xs mt-1">
+                    {addMut.error instanceof Error ? addMut.error.message : "Pastikan server berjalan dan coba lagi."}
+                  </p>
+                  <button
+                    onClick={() => addMut.reset()}
+                    className="mt-2 text-xs text-red-600 underline hover:no-underline"
+                  >
+                    Tutup
+                  </button>
                 </div>
               )}
             </div>

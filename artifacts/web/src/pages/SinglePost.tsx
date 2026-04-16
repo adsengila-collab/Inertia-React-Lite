@@ -47,6 +47,39 @@ export default function SinglePost({ slug }: SinglePostProps) {
 
   useEffect(() => { window.scrollTo(0, 0); }, [slug]);
 
+  useEffect(() => {
+    const pageTitle = `${title} Wallpaper - WallpaperHub`;
+    document.title = pageTitle;
+
+    let metaDesc = document.querySelector<HTMLMetaElement>('meta[name="description"]');
+    if (!metaDesc) {
+      metaDesc = document.createElement("meta");
+      metaDesc.name = "description";
+      document.head.appendChild(metaDesc);
+    }
+    metaDesc.content = `Download and browse the best ${title.toLowerCase()} wallpapers and images. High quality ${title.toLowerCase()} pictures for desktop, mobile, and tablets. Free HD wallpapers curated for you.`;
+
+    let metaOgTitle = document.querySelector<HTMLMetaElement>('meta[property="og:title"]');
+    if (!metaOgTitle) {
+      metaOgTitle = document.createElement("meta");
+      metaOgTitle.setAttribute("property", "og:title");
+      document.head.appendChild(metaOgTitle);
+    }
+    metaOgTitle.content = pageTitle;
+
+    let metaOgDesc = document.querySelector<HTMLMetaElement>('meta[property="og:description"]');
+    if (!metaOgDesc) {
+      metaOgDesc = document.createElement("meta");
+      metaOgDesc.setAttribute("property", "og:description");
+      document.head.appendChild(metaOgDesc);
+    }
+    metaOgDesc.content = `Download and browse the best ${title.toLowerCase()} wallpapers and images. High quality ${title.toLowerCase()} pictures for desktop, mobile, and tablets.`;
+
+    return () => {
+      document.title = "WallpaperHub";
+    };
+  }, [title]);
+
   const { data: imageData, isLoading } = useSearchImages(
     { q: title, count: 20 },
     { query: { enabled: !!slug } }

@@ -25,18 +25,32 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 - Uses mock data with Picsum Photos for images
 - Sidebar with random keyword tags, image lightbox, search navigation
 
-### `artifacts/api-server` — API Server (Express)
-- Health check endpoint only
-- Database not used by web app
+### `artifacts/api-server` — API Server (Express, port 8080)
+- Keyword management (add, list, delete) via flat-file `data/keywords.txt`
+- DuckDuckGo image scraper for `/api/images/search`
+- Sitemap generation at `/sitemap/index.xml`, `/sitemap/posts-*.xml`
+- Robots.txt at `/robots.txt`
+- Data stored at `data/keywords.txt` (workspace root)
+
+## Workflows
+
+- **Backend**: `cd artifacts/api-server && PORT=8080 pnpm run dev` (console, port 8080)
+- **Frontend**: `cd artifacts/web && PORT=8081 BASE_PATH=/ API_PORT=8080 pnpm run dev` (webview, port 8081)
 
 ## Key Commands
 
+- `pnpm install --frozen-lockfile` — install all dependencies (run first)
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from OpenAPI spec
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- `pnpm --filter @workspace/api-server run dev` — run API server locally
-- `pnpm --filter @workspace/web run dev` — run web frontend locally
+
+## Vite Proxy (Dev)
+
+The frontend vite dev server proxies these paths to the API server:
+- `/api/**` → `http://localhost:$API_PORT` (default 8080)
+- `/sitemap/**` → `http://localhost:$API_PORT`
+- `/robots.txt` → `http://localhost:$API_PORT`
 
 ## Web App Structure
 

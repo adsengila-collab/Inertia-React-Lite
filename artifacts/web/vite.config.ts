@@ -62,6 +62,20 @@ export default defineConfig({
     port,
     host: "0.0.0.0",
     allowedHosts: true,
+    proxy: {
+      "/api": {
+        target: `http://localhost:${process.env.API_PORT ?? 8080}`,
+        changeOrigin: true,
+      },
+      "/sitemap": {
+        target: `http://localhost:${process.env.API_PORT ?? 8080}`,
+        changeOrigin: true,
+      },
+      "/robots.txt": {
+        target: `http://localhost:${process.env.API_PORT ?? 8080}`,
+        changeOrigin: true,
+      },
+    },
     fs: {
       strict: true,
       deny: ["**/.*"],
