@@ -1,8 +1,0 @@
-uploads = []
-generated = []
-
-[[outputs]]
-id = "xMB1JWyjXR_1URMsMZriF"
-uri = "file://wallpaperhub.zip"
-type = "unspecified"
-title = "WallpaperHub - Deploy Package (CyberPanel)"
